@@ -2,47 +2,46 @@ import time
 import shutil
 from pathlib import Path
 from datetime import datetime
-import winsound  # مكتبة مدمجة في بايثون لتشغيل الأصوات (خاصة بنظام ويندوز)
-
-# تحديد مسار سطح المكتب
+import winsound  
+# Specify the desktop path
 desktop_path = Path.home() / "Desktop"
 
-# تحديد ملف السجل (Log File) على سطح المكتب
+# Locating the log file on the desktop
 log_file_path = desktop_path / "organizer_log.txt"
 
 # الفئات، الامتدادات، والمجلدات
 categories = {
-    "imgas": {".png", ".jpg", ".jpeg", ".gif", ".webp"},           # الصور
-    "Noat": {".txt", ".pdf", ".docx", ".doc", ".pptx", ".xlsx"},    # المستندات والنصوص
-    "Archives": {".zip", ".rar", ".7z", ".tar"},                    # الملفات المضغوطة
-    "Media": {".mp4", ".mp3", ".mkv", ".avi", ".wav"}               # الوسائط
+    "imgas": {".png", ".jpg", ".jpeg", ".gif", ".webp"},           # the pictures
+    "Noat": {".txt", ".pdf", ".docx", ".doc", ".pptx", ".xlsx"},    # Documents and texts
+    "Archives": {".zip", ".rar", ".7z", ".tar"},                    # Compressed files
+    "Media": {".mp4", ".mp3", ".mkv", ".avi", ".wav"}               # Media
 }
 
 def play_sound_alert():
-    """دالة لتشغيل صوت تنبيه النظام عند نقل الملف"""
+    """A function to trigger the system alert sound when a file is transferred"""
     try:
         # تشغيل صوت بتردد 1000 هيرتز ولمدة 300 ميللي ثانية
         winsound.Beep(1000, 300)
     except Exception as e:
-        print(f"تعذر تشغيل الصوت: {e}")
+        print(f"Unable to play audio: {e}")
 
 def write_log(message, play_sound=False):
     """A function to write to the log and play a sound, if requested."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {message}"
     
-    # طباعة في الشاشة
+    # Screen printing
     print(log_entry)
     
-    # حفظ في ملف السجل
+    # Save to log file
     with open(log_file_path, "a", encoding="utf-8") as log_file:
         log_file.write(log_entry + "\n")
         
-    # تشغيل الصوت إذا كانت المفعلة True
+    # Play audio if enabled (True)
     if play_sound:
         play_sound_alert()
 
-# بدء التشغيل
+# Getting Started
 print("👀 Monitoring the desktop, with logging and audio alerts enabled...")
 print("Press (Ctrl + C) to stop the program at any time.")
 print("=" * 65)
@@ -53,31 +52,31 @@ try:
     while True:
         for item in desktop_path.iterdir():
             if item.is_file():
-                # تجاهل ملف السجل لكي لا يتم نقله
+                # Ignore the log file so that it is not transferred
                 if item.name == "organizer_log.txt":
                     continue
                 
                 file_suffix = item.suffix.lower()
                 
-                # فحص الامتدادات والمجلدات
+                # Scan extensions and folders
                 for folder_name, extensions in categories.items():
                     if file_suffix in extensions:
                         target_folder = desktop_path / folder_name
                         target_folder.mkdir(parents=True, exist_ok=True)
                         target_path = target_folder / item.name
                         
-                        # تأخير بسيط لضمان اكتمال حفظ الملف
+                        # A brief delay to ensure the file is completely saved
                         time.sleep(0.5)
                         
-                        # نقل الملف
+                        # Transfer file
                         shutil.move(item, target_path)
                         
-                        # رسالة النجاح (مع تفعيل الصوت بـ True)
+                        # Success message (with sound enabled)
                         msg = f"تم نقل الملف '{item.name}' ⬅️ إلى مجلد '{folder_name}'"
                         write_log(msg, play_sound=True)
                         break
                         
-        # استراحة ثانيتين بين كل عملية فحص وأخرى لتجنب استهلاك المعالج
+        # Take a two-second break between each scan to avoid overloading the processor.
         time.sleep(2)
 
 except KeyboardInterrupt:
